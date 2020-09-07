@@ -1,0 +1,70 @@
+#!/bin/bash
+
+command=$(basename $0)
+
+function zk_new {
+    if [[ -z $@ ]]; then
+        echo "error: a filename must be specified." >&2
+        echo "" >&2
+        echo "usage: $command new <name>" >&2
+        exit 1
+    fi
+
+    file="$ZK_PATH/$(date +"%Y%m%d%H%M")_$@.md"
+
+    if [[ -z $ZK_EDITOR ]]; then
+        nvim -c ":set autochdir" "$file"
+    else
+        $ZK_EDITOR "$file"
+    fi
+}
+
+function zk_help_new {
+    echo "usage: $command new <name>"
+    echo "Create a new note in $ZK_PATH with the given name and a prefix"
+}
+
+function zk_search {
+    if [[ -z $@ ]]; then
+        echo "error: no pattern given." >&2
+        echo "" >&2
+        echo "usage: $command search <pattern> [<grep args>]" >&2
+        exit 1
+    fi
+
+    grep $@ -r $ZK_PATH --color=auto --exclude-dir=.git
+}
+
+function zk_help_search {
+    echo "usage: $command search <pattern> [<grep args>]"
+    echo "Search for a given pattern through the notes in $ZK_PATH"
+}
+
+function zk_help {
+    echo "usage: $command <command> [options]"
+    echo "commands:"
+    echo "    new      Create a new note in $ZK_PATH"
+    echo "    search   Search through the files in $ZK_PATH"
+    echo ""
+}
+
+function zk {
+    subcommand=$1
+    case $subcommand in
+        "" | "-h" | "--help")
+            zk_help
+            ;;
+        *)
+            shift
+            if type zk_${subcommand} &>/dev/null; then
+                zk_${subcommand} $@
+            else
+                echo "Error: '$subcommand' is not a known subcommand." >&2
+                echo "       Run '$command --help' for a list of known commands." >&2
+                exit 1
+            fi
+            ;;
+    esac
+}
+
+zk $@
