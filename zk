@@ -2,42 +2,51 @@
 
 command=$(basename $0)
 
-function zk_new {
-    if [[ -z $@ ]]; then
-        echo "error: a filename must be specified." >&2
-        echo "" >&2
-        echo "usage: $command new <name>" >&2
-        exit 1
-    fi
-
-    file="$ZK_PATH/$(date +"%Y%m%d%H%M")_$@.md"
-
-    if [[ -z $ZK_EDITOR ]]; then
-        nvim -c ":set autochdir" "$file"
-    else
-        $ZK_EDITOR "$file"
-    fi
+function zk_new_help {
+    echo "usage: $command new <name>"
+    echo "Create a new note in $ZK_PATH with the given name and arbitrary prefix"
+    echo ""
 }
 
-function zk_help_new {
-    echo "usage: $command new <name>"
-    echo "Create a new note in $ZK_PATH with the given name and a prefix"
+function zk_new {
+    case $@ in
+        "" | "-h" | "--help")
+            zk_new_help
+            ;;
+        -*)
+            echo "unknown option: $1"
+            zk_new_help
+            ;;
+        *)
+            file="$ZK_PATH/$(date +"%Y%m%d%H%M")_$@.md"
+
+            if [[ -z $ZK_EDITOR ]]; then
+                nvim -c ":set autochdir" "$file"
+            else
+                $ZK_EDITOR "$file"
+            fi
+            ;;
+    esac
+}
+
+function zk_search_help {
+    echo "usage: $command search <pattern> [<grep args>]" >&2
+    echo "Search for a given pattern through the notes in $ZK_PATH" >&2
 }
 
 function zk_search {
-    if [[ -z $@ ]]; then
-        echo "error: no pattern given." >&2
-        echo "" >&2
-        echo "usage: $command search <pattern> [<grep args>]" >&2
-        exit 1
-    fi
-
-    grep $@ -r $ZK_PATH --color=auto --exclude-dir=.git
-}
-
-function zk_help_search {
-    echo "usage: $command search <pattern> [<grep args>]"
-    echo "Search for a given pattern through the notes in $ZK_PATH"
+    case $@ in
+        "" | "-h" | "--help")
+            zk_search_help
+            ;;
+        -*)
+            echo "unknown option: $1"
+            zk_search_help
+            ;;
+        *)
+            grep $@ -r $ZK_PATH --color=auto --exclude-dir=.git
+            ;;
+    esac
 }
 
 function zk_help {
@@ -45,7 +54,6 @@ function zk_help {
     echo "commands:"
     echo "    new      Create a new note in $ZK_PATH"
     echo "    search   Search through the files in $ZK_PATH"
-    echo ""
 }
 
 function zk {
@@ -59,7 +67,7 @@ function zk {
             if type zk_${subcommand} &>/dev/null; then
                 zk_${subcommand} $@
             else
-                echo "Error: '$subcommand' is not a known subcommand." >&2
+                echo "Error: '$subcommand' is not a known command." >&2
                 echo "       Run '$command --help' for a list of known commands." >&2
                 exit 1
             fi
