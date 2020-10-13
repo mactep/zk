@@ -3,9 +3,8 @@
 command=$(basename $0)
 
 function zk_new_help {
-    echo "usage: $command new <name>"
-    echo "Create a new note in $ZK_PATH with the given name and arbitrary prefix"
-    echo ""
+    echo "usage: $command new <name>" >&2
+    echo "Create a new note in $ZK_PATH with the given name and an arbitrary prefix" >&2
 }
 
 function zk_new {
@@ -40,7 +39,7 @@ function zk_search {
             zk_search_help
             ;;
         -*)
-            echo "unknown option: $1"
+            echo "unknown option: $1" >&2
             zk_search_help
             ;;
         *)
@@ -50,10 +49,11 @@ function zk_search {
 }
 
 function zk_help {
-    echo "usage: $command <command> [options]"
+    echo "usage: $command <command> [<args>]"
     echo "commands:"
     echo "    new      Create a new note in $ZK_PATH"
     echo "    search   Search through the files in $ZK_PATH"
+    echo "    help     Show this message"
 }
 
 function zk {
