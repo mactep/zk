@@ -1,78 +1,151 @@
 #!/bin/bash
 
-command=$(basename $0)
+script=$(basename "${BASH_SOURCE[0]}")
 
-function zk_new_help {
-    echo "usage: $command new <name>" >&2
-    echo "Create a new note in $ZK_PATH with the given name and an arbitrary prefix" >&2
+new_usage() {
+  cat <<EOF
+Usage: $script new [-h] [NAME]
+
+Creates a new note in $ZK_PATH with the given NAME and a prefix.
+
+Available options:
+
+  -h, --help      Print this help and exit
+EOF
+  exit
 }
 
-function zk_new {
-    case $@ in
-        "" | "-h" | "--help")
-            zk_new_help
-            ;;
-        -*)
-            echo "unknown option: $1"
-            zk_new_help
-            ;;
-        *)
-            file="$ZK_PATH/$(date +"%Y%m%d%H%M")_$@.md"
-
-            if [[ -z $ZK_EDITOR ]]; then
-                nvim -c ":set autochdir" "$file"
-            else
-                $ZK_EDITOR "$file"
-            fi
-            ;;
+new() {
+  while :; do
+    case "${1-}" in
+    -h | --help) new_usage ;;
+    -?*) echo "Unknown option: $1" && exit ;;
+    *) break ;;
     esac
+    shift
+  done
+
+  args=("$@")
+  if [[ -z $args ]]; then
+    new_usage
+    exit
+  else
+    file="$(date +"%Y%m%d%H%M")_$args.md"
+    nvim "$file"
+  fi
 }
 
-function zk_search_help {
-    echo "usage: $command search <pattern> [<grep args>]" >&2
-    echo "Search for a given pattern through the notes in $ZK_PATH" >&2
+search_usage() {
+  cat <<EOF
+Usage: $script search [-h] [EXPR]
+
+Search for notes in $ZK_PATH containing the given EXPR.
+
+Available options:
+
+  -h, --help      Print this help and exit
+EOF
+  exit
 }
 
-function zk_search {
-    case $@ in
-        "" | "-h" | "--help")
-            zk_search_help
-            ;;
-        -*)
-            echo "unknown option: $1" >&2
-            zk_search_help
-            ;;
-        *)
-            grep $@ -r $ZK_PATH --color=auto --exclude-dir=.git
-            ;;
+search() {
+  while :; do
+    case "${1-}" in
+    -h | --help) search_usage ;;
+    -?*) echo "Unknown option: $1" && exit ;;
+    *) break ;;
     esac
+    shift
+  done
+
+  args=("$@")
+  if [[ -z $args ]]; then
+    nvim -c "Ag"
+  else
+    nvim -c "Ag $args"
+  fi
 }
 
-function zk_help {
-    echo "usage: $command <command> [<args>]"
-    echo "commands:"
-    echo "    new      Create a new note in $ZK_PATH"
-    echo "    search   Search through the files in $ZK_PATH"
-    echo "    help     Show this message"
+push_usage() {
+  cat <<EOF
+Usage: $script push [-h]
+
+Pushes all new notes in $ZK_PATH to the remote repository.
+
+Available options:
+
+  -h, --help      Print this help and exit
+EOF
+  exit
 }
 
-function zk {
-    subcommand=$1
-    case $subcommand in
-        "" | "-h" | "--help")
-            zk_help
-            ;;
-        *)
-            shift
-            if type zk_${subcommand} &>/dev/null; then
-                zk_${subcommand} $@
-            else
-                echo "Error: '$subcommand' is not a known command." >&2
-                echo "       Run '$command --help' for a list of known commands." >&2
-                exit 1
-            fi
-            ;;
+push() {
+  while :; do
+    case "${1-}" in
+    -h | --help) push_usage ;;
+    -?*) echo "Unknown option: $1" && exit ;;
+    *) break ;;
     esac
+    shift
+  done
+
+  git add .
+
+  args=("$@")
+  if [[ -z $args ]]; then
+    git commit -m "Saving new notes"
+  else
+    git commit -m "$args"
+  fi
+
+  git push
 }
 
-zk $@
+usage() {
+  cat <<EOF
+Usage: $script [-h] <command> <args>
+
+Script description here.
+
+Available options:
+
+  -h, --help      Print this help and exit
+
+Available commands:
+
+  new             Create a new note
+  push            Push changes to the upstream repository
+  search          Search for notes
+
+EOF
+  exit
+}
+
+main() {
+  while :; do
+    case "${1-}" in
+    -h | --help) usage ;;
+    -?*) echo "Unknown option: $1" && exit ;;
+    *) break ;;
+    esac
+    shift
+  done
+
+  args=("$@")
+  [[ ${#args[@]} -eq 0 ]] && usage && exit
+
+  cd $ZK_PATH
+  command=${1-}
+  shift
+
+  case "$command" in
+    new) new $@ ;;
+    push) push ;;
+    search) search $@ ;;
+    *) echo "Unknown command: $command" && exit ;;
+  esac
+
+  return 0
+}
+
+main "$@"
