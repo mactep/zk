@@ -60,9 +60,9 @@ search() {
 
   args=("$@")
   if [[ -z $args ]]; then
-    nvim -c "Ag"
+    nvim -c "RG"
   else
-    nvim -c "Ag $args"
+    nvim -c "RG $args"
   fi
 }
 
