@@ -37,9 +37,9 @@ new() {
 
 search_usage() {
   cat <<EOF
-Usage: $script search [-h] [EXPR]
+Usage: $script search [-h]
 
-Search for notes in $ZK_PATH containing the given EXPR.
+Start Neovim in $ZK_PATH with the search engine open.
 
 Available options:
 
@@ -58,12 +58,7 @@ search() {
     shift
   done
 
-  args=("$@")
-  if [[ -z $args ]]; then
-    nvim -c "RG"
-  else
-    nvim -c "RG $args"
-  fi
+  nvim -c "Telescope live_grep"
 }
 
 push_usage() {
@@ -101,6 +96,10 @@ push() {
   git push
 }
 
+diff() {
+  git diff
+}
+
 usage() {
   cat <<EOF
 Usage: $script [-h] <command> <args>
@@ -113,6 +112,7 @@ Available options:
 
 Available commands:
 
+  diff            Print new modifications
   new             Create a new note
   push            Push changes to the upstream repository
   search          Search for notes
@@ -142,6 +142,7 @@ main() {
     new) new $@ ;;
     push) push ;;
     search) search $@ ;;
+    diff) diff ;;
     *) echo "Unknown command: $command" && exit ;;
   esac
 

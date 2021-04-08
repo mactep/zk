@@ -6,8 +6,7 @@ Bash script that I use to manage my notes. Heavily inspired on
 ## Dependencies
 
 * [Neovim](https://neovim.io/)
-* [fzf](https://github.com/junegunn/fzf)
-* [fzf.vim](https://github.com/junegunn/fzf.vim)
+* [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
 * [ripgrep](https://github.com/BurntSushi/ripgrep)
 
 ## Setup
@@ -16,17 +15,7 @@ Bash script that I use to manage my notes. Heavily inspired on
 * Add run permission to script: `chmod u+x zk`
 * Define your Zettelkasten directory: `echo "export ZK_PATH=path/to/your/zk" >> ~/.bashrc`
 * Put `zk` somewhere in `$PATH` if you want to call it directly.
-* Install Neovim, fzf, fzf.vim, ripgrep and add the following to `$MYVIMRC`:
-``` vim
-function! RipgrepFzf(query, fullscreen)
-  let command_fmt = 'rg --column --line-number --no-heading --color=always --smart-case %s || true'
-  let initial_command = printf(command_fmt, shellescape(a:query))
-  let reload_command = printf(command_fmt, '{q}')
-  let spec = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
-  call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
-endfunction
-command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)
-```
+* Install Neovim, telescope.nvim and ripgrep.
 
 ## Built-in functionalities
 ### Search
