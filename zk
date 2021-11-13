@@ -16,23 +16,7 @@ EOF
 }
 
 new() {
-  while :; do
-    case "${1-}" in
-    -h | --help) new_usage ;;
-    -?*) echo "Unknown option: $1" && exit ;;
-    *) break ;;
-    esac
-    shift
-  done
-
-  args=("$@")
-  if [[ -z $args ]]; then
-    new_usage
-    exit
-  else
-    file="$(date +"%Y%m%d%H%M")_$args.md"
-    nvim "$file"
-  fi
+  nvim "+Zk $*"
 }
 
 search_usage() {
@@ -58,7 +42,33 @@ search() {
     shift
   done
 
-  nvim -c "Telescope live_grep"
+  nvim -c "lua search_zk()"
+}
+
+grep_usage() {
+  cat <<EOF
+Usage: $script grep [-h]
+
+Start Neovim and dinamically search notes contents inside $ZK_PATH.
+
+Available options:
+
+  -h, --help      Print this help and exit
+EOF
+  exit
+}
+
+grep() {
+  while :; do
+    case "${1-}" in
+    -h | --help) grep_usage ;;
+    -?*) echo "Unknown option: $1" && exit ;;
+    *) break ;;
+    esac
+    shift
+  done
+
+  nvim -c "lua grep_zk()"
 }
 
 push_usage() {
@@ -116,6 +126,7 @@ Available commands:
   new             Create a new note
   push            Push changes to the upstream repository
   search          Search for notes
+  grep            Seach the content of the notes
 
 EOF
   exit
@@ -141,7 +152,8 @@ main() {
   case "$command" in
     new) new $@ ;;
     push) push ;;
-    search) search $@ ;;
+    search) search ;;
+    grep) grep ;;
     diff) diff ;;
     *) echo "Unknown command: $command" && exit ;;
   esac
